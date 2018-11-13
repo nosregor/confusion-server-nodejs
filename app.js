@@ -3,12 +3,20 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const mongoose = require('mongoose');
 
+// add routes
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const dishRouter = require('./routes/dishRouter');
-const promoRouter = require('./routes/promoRouter');
-const leaderRouter = require('./routes/leaderRouter');
+
+// mongoDB connection
+const url = 'mongodb://localhost:27017/conFusion';
+const connect = mongoose.connect(url);
+
+connect.then((db) => {
+  console.log('Connected correctly to server');
+}, (err) => { console.log(err); });
 
 const app = express();
 
@@ -31,9 +39,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/dishes', dishRouter);
-app.use('/promotions', promoRouter);
-app.use('/leaders', leaderRouter);
-
 
 // error handler
 app.use((err, req, res, next) => {
