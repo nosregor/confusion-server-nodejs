@@ -1,8 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const passport = require('passport');
-const User = require('../models/users');
 
+const authenticate = require('../authenticate');
+
+const User = require('../models/users');
 
 const router = express.Router();
 router.use(bodyParser.json());
@@ -31,10 +33,21 @@ router.post('/signup', (req, res, next) => {
 });
 
 router.post('/login', passport.authenticate('local'), (req, res) => {
+  // when the user authenticates on the /login endpoint and the user is successfully authenticated,
+  // the token will be created by the server and sent back to the client or the user.
+  const token = authenticate.getToken({ _id: req.user._id }); // takes a payload which is the user_id
+
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
-  res.json({ success: true, status: 'You are successfully logged in!' });
+  // add in token in reply message
+  res.json({ success: true, token, status: 'You are successfully logged in!' });
 });
+
+// So, the client will include the token in every subsequent incoming request in the authorization header.
+// Now, how does it include the authorization header?
+// go back to authentic.js and you see that we said ExtractJWT.fromAuthHeaderAsBearerToken here.
+// So, this will be included in the authentication header as a bearer token.
+// I'll show you how this is done, then we use postman to include the bearer token into the authentication header.
 
 router.get('/logout', (req, res) => {
   if (req.session) {
