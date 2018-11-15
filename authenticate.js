@@ -9,7 +9,6 @@ const config = require('./config.js');
 
 const User = require('./models/users');
 
-
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
@@ -42,7 +41,17 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
   }));
 
 // Verify an incoming user JWT strategy - we dont create sessions, we are using token based
-exports.verifyUser = passport.authenticate('jwt', { session: false });
-
 // The token will be included in the authenticatoin header, its then extracted and used to
 // authtenticate the user
+exports.verifyUser = passport.authenticate('jwt', { session: false });
+
+exports.verifyAdmin = (req, res, next) => {
+  console.log('DEBUG verify Admin', req.user);
+  if (req.user.admin) {
+    next();
+  } else {
+    const err = new Error('You are not authorized to perform this operation!');
+    err.status = 403; // Forbidden
+    return next(err);
+  }
+};

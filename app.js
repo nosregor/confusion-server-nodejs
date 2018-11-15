@@ -28,11 +28,12 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+// use morgan to log requests to the console
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-
+// passport middleware
 app.use(passport.initialize());
 
 app.use(express.static(path.join(__dirname, 'public')));

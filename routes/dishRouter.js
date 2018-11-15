@@ -20,7 +20,8 @@ router.route('/')
       }, err => next(err))
       .catch(err => next(err));
   })
-  .post(authenticate.verifyUser, (req, res, next) => {
+  .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+    console.log(req.user);
     Dishes.create(req.body)
       .then((dish) => {
         console.log('Dish Created ', dish);
@@ -30,11 +31,11 @@ router.route('/')
       }, err => next(err))
       .catch(err => next(err));
   })
-  .put(authenticate.verifyUser, (req, res, next) => {
+  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /dishes');
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
+  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.remove({})
       .then((resp) => {
         res.statusCode = 200;
@@ -56,7 +57,7 @@ router.route('/:dishId')
       }, err => next(err))
       .catch(err => next(err));
   })
-  .post(authenticate.verifyUser, (req, res, next) => {
+  .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /dishes/${req.params.dishId}`);
   })
@@ -71,7 +72,7 @@ router.route('/:dishId')
       }, err => next(err))
       .catch(err => next(err));
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
+  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.findByIdAndRemove(req.params.dishId)
       .then((resp) => {
         res.statusCode = 200;
@@ -133,7 +134,7 @@ router.route('/:dishId/comments')
     res.statusCode = 403;
     res.end(`PUT operation not supported on /dishes/${req.params.dishId}/comments`);
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
+  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.findById(req.params.dishId)
       .then((dish) => {
         if (dish != null) {
@@ -157,7 +158,7 @@ router.route('/:dishId/comments')
       .catch(err => next(err));
   });
 
-// declare all the end points for dishId
+// declare all the end points for :commentId
 router.route('/:dishId/comments/:commentId')
   .get((req, res, next) => {
     Dishes.findById(req.params.dishId)
@@ -191,8 +192,13 @@ router.route('/:dishId/comments/:commentId')
       .then((dish) => {
         // check if dish exists and dish comment exists
         if (dish != null && dish.comments.id(req.params.commentId) != null) {
-          // fields i allow user to update
-          // work around for updating embedded doc
+          // check if user is author of comment
+          if (!req.user._id.equals(dish.comments.id(req.params.commentId).author)) {
+            err = new Error('You are not authorized to update this comment!');
+            err.status = 403;
+            return next(err);
+          }
+          // check if fields have been updated
           if (req.body.rating) {
             dish.comments.id(req.params.commentId).rating = req.body.rating;
           }
@@ -201,7 +207,7 @@ router.route('/:dishId/comments/:commentId')
           }
           dish.save()
             .then((dish) => {
-              Dishes.findById(dish._id)
+              Dishes.findById(req.params.dish._id)
                 .populate('comments.author')
                 .then((dish) => {
                   res.statusCode = 200;
@@ -225,6 +231,13 @@ router.route('/:dishId/comments/:commentId')
     Dishes.findById(req.params.dishId)
       .then((dish) => {
         if (dish != null && dish.comments.id(req.params.commentId) != null) {
+          // check if user is author of comment
+          if (!req.user._id.equals(dish.comments.id(req.params.commentId).author)) {
+            err = new Error('You are not authorized to delete this comment!');
+            err.status = 403;
+            return next(err);
+          }
+
           dish.comments.id(req.params.commentId).remove();
           dish.save()
             .then((dish) => {
