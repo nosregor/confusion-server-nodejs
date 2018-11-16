@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 
 const authenticate = require('../authenticate');
+const cors = require('./cors');
 
 const User = require('../models/users');
 
@@ -10,7 +11,7 @@ const router = express.Router();
 router.use(bodyParser.json());
 
 /* GET users listing. */
-router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
   User.find({})
     .then((users) => {
       res.statusCode = 200;
@@ -21,7 +22,7 @@ router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, (req, res, ne
 });
 
 // user registration
-router.post('/signup', (req, res, next) => {
+router.post('/signup', cors.corsWithOptions, (req, res, next) => {
   User.register(new User({ username: req.body.username }),
     req.body.password, (err, user) => {
       if (err) {
@@ -48,7 +49,7 @@ router.post('/signup', (req, res, next) => {
     });
 });
 
-router.post('/login', passport.authenticate('local'), (req, res) => {
+router.post('/login', cors.corsWithOptions, passport.authenticate('local'), (req, res) => {
   // when the user authenticates on the /login endpoint and the user is successfully authenticated,
   // the token will be created by the server and sent back to the client or the user.
   const token = authenticate.getToken({ _id: req.user._id }); // takes a payload which is the user_id
