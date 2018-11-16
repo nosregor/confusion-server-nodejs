@@ -67,9 +67,10 @@ router.post('/login', cors.corsWithOptions, passport.authenticate('local'), (req
 // I'll show you how this is done, then we use postman to include the bearer token into the authentication header.
 
 router.get('/logout', (req, res) => {
-  if (req.session) {
-    req.session.destroy(); // destroy session on server side
-    res.clearCookie('session-id');
+  console.log('DEBUG LOGOUT: ', req.headers);
+
+  if (req.headers.authorization) {
+    delete req.headers.authorization; // destroy session on server side
     res.redirect('/');
   } else {
     const err = new Error('You are not logged in!');
