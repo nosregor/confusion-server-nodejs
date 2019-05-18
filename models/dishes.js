@@ -1,6 +1,6 @@
 // grab the things we need
-const mongoose = require("mongoose");
-require("mongoose-currency").loadType(mongoose);
+const mongoose = require('mongoose');
+require('mongoose-currency').loadType(mongoose);
 
 const Currency = mongoose.Types.Currency;
 
@@ -27,7 +27,7 @@ const dishSchema = new Schema(
     },
     label: {
       type: String,
-      default: ""
+      default: ''
     },
     price: {
       type: Currency,
@@ -46,7 +46,7 @@ const dishSchema = new Schema(
 
 // the schema is useless so far
 // we need to create a model using it
-const Dishes = mongoose.model("Dish", dishSchema);
+const Dishes = mongoose.model('Dish', dishSchema);
 
 // make this available to our Node applications
 module.exports = Dishes;

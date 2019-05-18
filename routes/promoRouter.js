@@ -1,16 +1,17 @@
-const express = require("express");
-const bodyParser = require("body-parser");
+/* eslint-disable no-console */
+const express = require('express');
+const bodyParser = require('body-parser');
 
-const authenticate = require("../authenticate");
-const cors = require("./cors");
+const authenticate = require('../authenticate');
+const cors = require('./cors');
 
-const Promotion = require("../models/promotions");
+const Promotion = require('../models/promotions');
 
 const router = express.Router();
 router.use(bodyParser.json());
 
 router
-  .route("/")
+  .route('/')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
@@ -18,9 +19,9 @@ router
     Promotion.find(req.query)
       .then(
         promos => {
-          console.log("All Promotions returned ", promos);
+          console.log('All Promotions returned ', promos);
           res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
+          res.setHeader('Content-Type', 'application/json');
           res.json(promos);
         },
         err => next(err)
@@ -35,9 +36,9 @@ router
       Promotion.create(req.body)
         .then(
           promo => {
-            console.log("Promotion Created ", promo);
+            console.log('Promotion Created ', promo);
             res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
+            res.setHeader('Content-Type', 'application/json');
             res.json(promo);
           },
           err => next(err)
@@ -49,9 +50,9 @@ router
     cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
-    (req, res, next) => {
+    (req, res) => {
       res.statusCode = 403;
-      res.end("PUT operation not supported on /promotions");
+      res.end('PUT operation not supported on /promotions');
     }
   )
   .delete(
@@ -62,9 +63,9 @@ router
       Promotion.remove({})
         .then(
           resp => {
-            console.log("All promotions removed ", resp);
+            console.log('All promotions removed ', resp);
             res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
+            res.setHeader('Content-Type', 'application/json');
             res.json(resp);
           },
           err => next(err)
@@ -74,7 +75,7 @@ router
   );
 
 router
-  .route("/:promoId")
+  .route('/:promoId')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
@@ -83,7 +84,7 @@ router
       .then(
         promo => {
           res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
+          res.setHeader('Content-Type', 'application/json');
           res.json(promo);
         },
         err => next(err)
@@ -94,7 +95,7 @@ router
     cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
-    (req, res, next) => {
+    (req, res) => {
       res.statusCode = 403;
       res.end(
         `POST operation not supported on /promotions/${req.params.promoId}`
@@ -109,14 +110,14 @@ router
       Promotion.findByIdAndUpdate(
         req.params.promoId,
         {
-          $set: req.body
+          $set: req.body,
         },
         { new: true }
       )
         .then(
           promo => {
             res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
+            res.setHeader('Content-Type', 'application/json');
             res.json(promo);
           },
           err => next(err)
@@ -133,7 +134,7 @@ router
         .then(
           resp => {
             res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
+            res.setHeader('Content-Type', 'application/json');
             res.json(resp);
           },
           err => next(err)

@@ -1,27 +1,27 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
-var authenticate = require("../authenticate");
-const cors = require("./cors");
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+var authenticate = require('../authenticate');
+const cors = require('./cors');
 
-const Comments = require("../models/comments");
+const Comments = require('../models/comments');
 
 const commentRouter = express.Router();
 
 commentRouter.use(bodyParser.json());
 
 commentRouter
-  .route("/")
+  .route('/')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
   .get(cors.cors, (req, res, next) => {
     Comments.find(req.query)
-      .populate("author")
+      .populate('author')
       .then(
         comments => {
           res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
+          res.setHeader('Content-Type', 'application/json');
           res.json(comments);
         },
         err => next(err)
@@ -35,10 +35,10 @@ commentRouter
         .then(
           comment => {
             Comments.findById(comment._id)
-              .populate("author")
+              .populate('author')
               .then(comment => {
                 res.statusCode = 200;
-                res.setHeader("Content-Type", "application/json");
+                res.setHeader('Content-Type', 'application/json');
                 res.json(comment);
               });
           },
@@ -46,14 +46,14 @@ commentRouter
         )
         .catch(err => next(err));
     } else {
-      err = new Error("Comment not found in request body");
+      err = new Error('Comment not found in request body');
       err.status = 404;
       return next(err);
     }
   })
   .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
-    res.end("PUT operation not supported on /comments/");
+    res.end('PUT operation not supported on /comments/');
   })
   .delete(
     cors.corsWithOptions,
@@ -64,7 +64,7 @@ commentRouter
         .then(
           resp => {
             res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
+            res.setHeader('Content-Type', 'application/json');
             res.json(resp);
           },
           err => next(err)
@@ -74,17 +74,17 @@ commentRouter
   );
 
 commentRouter
-  .route("/:commentId")
+  .route('/:commentId')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
   .get(cors.cors, (req, res, next) => {
     Comments.findById(req.params.commentId)
-      .populate("author")
+      .populate('author')
       .then(
         comment => {
           res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
+          res.setHeader('Content-Type', 'application/json');
           res.json(comment);
         },
         err => next(err)
@@ -94,7 +94,7 @@ commentRouter
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end(
-      "POST operation not supported on /comments/" + req.params.commentId
+      'POST operation not supported on /comments/' + req.params.commentId
     );
   })
   .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
@@ -104,7 +104,7 @@ commentRouter
           if (comment != null) {
             if (!comment.author.equals(req.user._id)) {
               var err = new Error(
-                "You are not authorized to update this comment!"
+                'You are not authorized to update this comment!'
               );
               err.status = 403;
               return next(err);
@@ -119,17 +119,17 @@ commentRouter
             ).then(
               comment => {
                 Comments.findById(comment._id)
-                  .populate("author")
+                  .populate('author')
                   .then(comment => {
                     res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
+                    res.setHeader('Content-Type', 'application/json');
                     res.json(comment);
                   });
               },
               err => next(err)
             );
           } else {
-            err = new Error("Comment " + req.params.commentId + " not found");
+            err = new Error('Comment ' + req.params.commentId + ' not found');
             err.status = 404;
             return next(err);
           }
@@ -145,7 +145,7 @@ commentRouter
           if (comment != null) {
             if (!comment.author.equals(req.user._id)) {
               var err = new Error(
-                "You are not authorized to delete this comment!"
+                'You are not authorized to delete this comment!'
               );
               err.status = 403;
               return next(err);
@@ -154,14 +154,14 @@ commentRouter
               .then(
                 resp => {
                   res.statusCode = 200;
-                  res.setHeader("Content-Type", "application/json");
+                  res.setHeader('Content-Type', 'application/json');
                   res.json(resp);
                 },
                 err => next(err)
               )
               .catch(err => next(err));
           } else {
-            err = new Error("Comment " + req.params.commentId + " not found");
+            err = new Error('Comment ' + req.params.commentId + ' not found');
             err.status = 404;
             return next(err);
           }
