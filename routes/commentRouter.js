@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-var authenticate = require('../authenticate');
+const authenticate = require('../authenticate');
 const cors = require('./cors');
 
 const Comments = require('../models/comments');
@@ -29,6 +28,7 @@ commentRouter
       .catch(err => next(err));
   })
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    console.log(req.body);
     if (req.body != null) {
       req.body.author = req.user._id;
       Comments.create(req.body)
@@ -55,23 +55,18 @@ commentRouter
     res.statusCode = 403;
     res.end('PUT operation not supported on /comments/');
   })
-  .delete(
-    cors.corsWithOptions,
-    authenticate.verifyUser,
-    authenticate.verifyAdmin,
-    (req, res, next) => {
-      Comments.remove({})
-        .then(
-          resp => {
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
-            res.json(resp);
-          },
-          err => next(err)
-        )
-        .catch(err => next(err));
-    }
-  );
+  .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+    Comments.remove({})
+      .then(
+        resp => {
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.json(resp);
+        },
+        err => next(err)
+      )
+      .catch(err => next(err));
+  });
 
 commentRouter
   .route('/:commentId')
@@ -93,9 +88,7 @@ commentRouter
   })
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
-    res.end(
-      'POST operation not supported on /comments/' + req.params.commentId
-    );
+    res.end('POST operation not supported on /comments/' + req.params.commentId);
   })
   .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Comments.findById(req.params.commentId)
@@ -103,9 +96,7 @@ commentRouter
         comment => {
           if (comment != null) {
             if (!comment.author.equals(req.user._id)) {
-              var err = new Error(
-                'You are not authorized to update this comment!'
-              );
+              const err = new Error('You are not authorized to update this comment!');
               err.status = 403;
               return next(err);
             }
@@ -113,7 +104,7 @@ commentRouter
             Comments.findByIdAndUpdate(
               req.params.commentId,
               {
-                $set: req.body
+                $set: req.body,
               },
               { new: true }
             ).then(
@@ -144,9 +135,7 @@ commentRouter
         comment => {
           if (comment != null) {
             if (!comment.author.equals(req.user._id)) {
-              var err = new Error(
-                'You are not authorized to delete this comment!'
-              );
+              const err = new Error('You are not authorized to delete this comment!');
               err.status = 403;
               return next(err);
             }
@@ -161,7 +150,7 @@ commentRouter
               )
               .catch(err => next(err));
           } else {
-            err = new Error('Comment ' + req.params.commentId + ' not found');
+            const err = new Error(`Comment ${req.params.commentId} not found`);
             err.status = 404;
             return next(err);
           }

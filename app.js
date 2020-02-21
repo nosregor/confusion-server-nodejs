@@ -18,15 +18,14 @@ const leaderRouter = require('./routes/leaderRouter');
 const uploadRouter = require('./routes/uploadRouter');
 const favoriteRouter = require('./routes/favoriteRouter');
 const commentRouter = require('./routes/commentRouter');
+const healthRouter = require('./routes/health');
 
 const url = config.mongoUrl;
 
 mongoose
   .connect(url, { useNewUrlParser: true, useCreateIndex: true })
   .then(x => {
-    console.log(
-      `Connected to Mongo! Database name: "${x.connections[0].name}"`
-    );
+    console.log(`Connected to Mongo! Database name: "${x.connections[0].name}"`);
   })
   .catch(err => {
     console.error('Error connecting to mongo', err);
@@ -41,10 +40,7 @@ app.all('*', (req, res, next) => {
   }
   // redirect incoming request message to the secure port
   // 307 Temporary Redirect
-  return res.redirect(
-    307,
-    `https://${req.hostname}:${app.get('secPort')}${req.url}`
-  );
+  return res.redirect(307, `https://${req.hostname}:${app.get('secPort')}${req.url}`);
 });
 
 // view engine setup
@@ -69,6 +65,7 @@ app.use('/leaders', leaderRouter);
 app.use('/imageUpload', uploadRouter);
 app.use('/favorites', favoriteRouter);
 app.use('/comments', commentRouter);
+app.use('/health', healthRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

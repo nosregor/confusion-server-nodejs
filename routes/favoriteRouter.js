@@ -15,9 +15,8 @@ router
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
-  .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
-    Favorite.find({ user: req.user })
-      .populate('user')
+  .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    Favorite.findOne({ user: req.user._id })
       .populate('dishes')
       .then(
         favorites => {
@@ -30,85 +29,37 @@ router
       .catch(err => next(err));
   })
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    const { dishes } = req.body;
+    const dishes = [...req.body.values()];
+    const filter = { user: req.user._id };
+    const update = { $addToSet: { dishes: { $each: dishes } } };
+    const options = { upsert: true, new: true }; // Make this update into an upsert
 
-    Favorite.findOne({ user: req.user._id }, (err, favorite) => {
-      if (err) return next(err);
-
-      if (favorite === null) {
-        Favorite.create({ user: req.user._id }).then(favorite => {
-          for (let i = 0; i < dishes.length; i++) {
-            if (favorite.dishes.indexOf(dishes[i]) === -1) {
-              favorite.dishes.push(dishes[i]);
-            }
-          }
-          favorite
-            .save()
-            .then(favorite => {
-              Favorite.findById(favorite._id)
-                .populate('user')
-                .populate('dishes')
-                .then(favorite => {
-                  console.log('Favourite created!');
-                  res.statusCode = 200;
-                  res.setHeader('Content-Type', 'application/json');
-                  res.json(favorite);
-                })
-                .catch(err => {
-                  return next(err);
-                });
-            })
-            .catch(err => {
-              return next(err);
-            });
-        });
-      } else {
-        for (let i = 0; i < dishes.length; i++) {
-          if (favorite.dishes.indexOf(dishes[i]) !== -1) {
-            favorite.dishes.push(dishes[i]);
-          }
-          favorite
-            .save()
-            .then(favorite => {
-              Favorites.findById(favorite._id)
-                .populate('user')
-                .populate('dishes')
-                .then(favorite => {
-                  res.statusCode = 200;
-                  res.setHeader('Content-Type', 'application/json');
-                  res.json(favorite);
-                });
-            })
-            .catch(err => {
-              next(err);
-            });
-        }
-      }
-    });
+    Favorite.findOneAndUpdate(filter, update, options)
+      .populate('user')
+      .populate('dishes')
+      .then(
+        favorite => {
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.json(favorite);
+        },
+        err => next(err)
+      )
+      .catch(err => next(err));
   })
-
   .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /favorites');
   })
   .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    Favorite.findOne({ user: req.user._id })
+    Favorite.findOneAndDelete({ user: req.user._id })
+      .populate('user')
+      .populate('dishes')
       .then(
         favorite => {
-          if (favorite != null) {
-            favorite.remove().then(
-              resp => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(resp);
-              },
-              err => next(err)
-            );
-          } else {
-            const err = new Error('Favorite not found');
-            err.status = 404;
-            return next(err);
-          }
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.json(favorite);
         },
         err => next(err)
       )
@@ -121,7 +72,6 @@ router
     res.sendStatus(200);
   })
   .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
-    console.log(req.user._id);
     Favorite.findOne({ user: req.user._id })
       .then(
         favorite => {
@@ -144,94 +94,49 @@ router
         err => next(err)
       )
       .catch(err => next(err));
+    // console.log('favorites/:dishId');
+    // res.statusCode = 403;
+    // res.end('GET operation not supported on /favorites/:dishId');
   })
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    // console.log('DEBUG PARAMS: ', req.params);
-    Favorite.findOne({ user: req.user._id }, (err, favorite) => {
-      if (err) return next(err);
+    const { dishId } = req.params;
 
-      // if such a document corresponding to this user does not already exist
-      if (!favorite) {
-        Favorite.create({ user: req.user._id })
-          // create a favorite document
-          .then(favorite => {
-            favorite.dishes.push({ _id: req.params.dishId });
-            favorite
-              .save()
-              .then(favorite => {
-                Favorite.findById(favorite._id)
-                  .populate('user')
-                  .populate('dishes')
-                  .then(favorite => {
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json(favorite);
-                  })
-                  .catch(err => next(err));
-              })
-              .catch(err => next(err));
-          })
-          .catch(err => next(err));
-      }
+    const filter = { user: req.user._id };
+    const update = { $addToSet: { dishes: dishId } };
+    const options = { upsert: true, new: true }; // Make this update into an upsert
 
-      if (favorite.dishes.indexOf(req.params.dishId) !== -1) {
-        res.statusCode = 403;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(`Dish ${req.params.dishId} already exits!`);
-      }
-
-      // favorite.dishes.push(req.params.dishId);
-      favorite.dishes.push(req.body);
-      favorite
-        .save()
-        .then(favorite => {
-          Favorite.findById(favorite._id)
-            .populate('user')
-            .populate('dishes')
-            .then(favorite => {
-              res.statusCode = 200;
-              res.setHeader('Content-Type', 'application/json');
-              res.json(favorite);
-            })
-            .catch(err => next(err));
-        })
-        .catch(err => {
-          return next(err);
-        });
-    });
+    Favorite.findOneAndUpdate(filter, update, options)
+      .populate('user')
+      .populate('dishes')
+      .then(
+        favorite => {
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.json(favorite);
+        },
+        err => next(err)
+      )
+      .catch(err => next(err));
   })
-
   .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    Favorite.findOne({ user: req.user._id }, (err, favorite) => {
-      if (err) return next(err);
+    const { dishId } = req.params;
 
-      console.log(favorite);
-      const index = favorite.dishes.indexOf(req.params.dishId);
+    const filter = { user: req.user._id };
+    const update = { $pull: { dishes: dishId } };
+    const options = { new: true };
 
-      if (index >= 0) {
-        favorite.dishes.splice(index, 1);
-        favorite.save();
-        favorite
-          .save()
-          .then(favorite => {
-            Favorites.findById(favorite._id)
-              .populate('user')
-              .populate('dishes')
-              .then(favorite => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(favorite);
-              });
-          })
-          .catch(err => {
-            return next(err);
-          });
-      } else {
-        res.statusCode = 404;
-        res.setHeader('Content-Type', 'text/plain');
-        res.end(`Dish ${req.params._id} not found`);
-      }
-    });
+    Favorite.findOneAndUpdate(filter, update, options)
+      .populate('user')
+      .populate('dishes')
+      .then(
+        resp => {
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.json(resp);
+        },
+        err => next(err)
+      )
+      .catch(err => next(err));
   });
 
 module.exports = router;
