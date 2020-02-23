@@ -32,7 +32,7 @@ feedbackRouter
       return next(err);
     }
   })
-  .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+  .put(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /feedbacks/');
   })
