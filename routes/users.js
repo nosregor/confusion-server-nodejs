@@ -77,7 +77,7 @@ router.post('/login', cors.corsWithOptions, (req, res, next) => {
         res.json({
           success: false,
           status: 'Login Unsuccessful!',
-          err: 'Could not log in user!'
+          err: 'Could not log in user!',
         });
       }
 
@@ -117,7 +117,7 @@ router.get('/facebook/token', passport.authenticate('facebook-token'), (req, res
     res.json({
       success: true,
       token,
-      status: 'You are successfully logged in!'
+      status: 'You are successfully logged in!',
     });
   }
 });
