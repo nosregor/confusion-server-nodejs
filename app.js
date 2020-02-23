@@ -11,6 +11,7 @@ const config = require('./config.js');
 
 // add routes
 const indexRouter = require('./routes/index');
+const swaggerDocRouter = require('./routes/swagger-doc');
 const usersRouter = require('./routes/users');
 const dishRouter = require('./routes/dishRouter');
 const promoRouter = require('./routes/promoRouter');
@@ -19,6 +20,7 @@ const uploadRouter = require('./routes/uploadRouter');
 const favoriteRouter = require('./routes/favoriteRouter');
 const commentRouter = require('./routes/commentRouter');
 const healthRouter = require('./routes/health');
+const feedbackRouter = require('./routes/feedbackRouter');
 
 const url = config.mongoUrl;
 
@@ -58,6 +60,7 @@ app.use(passport.initialize());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+app.use('/api-docs', swaggerDocRouter);
 app.use('/users', usersRouter);
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
@@ -66,6 +69,7 @@ app.use('/imageUpload', uploadRouter);
 app.use('/favorites', favoriteRouter);
 app.use('/comments', commentRouter);
 app.use('/health', healthRouter);
+app.use('/feedback', feedbackRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
